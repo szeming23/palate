@@ -1,0 +1,19 @@
+# Weekly version-update PRs. Each one must pass CI before it can merge.
+# npm is left out on purpose: Expo pins its packages to the SDK version, so upgrade
+# them with `npx expo install --fix`. Security alerts still cover npm.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+  - package-ecosystem: pip
+    directory: /backend
+    schedule:
+      interval: weekly
+    groups:
+      python:
+        patterns: ["*"]

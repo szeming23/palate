@@ -15,7 +15,7 @@ Decisions and future plans from the kickoff discussion (2026-09-24).
 - [x] pytest suite for the backend (fakes for Claude + Places, temp DB per test), ruff lint/format
 - [x] GitHub Actions: backend tests on Python 3.11 + 3.14, mobile `tsc` typecheck; `scripts/check.sh` runs the same locally
 - [x] Rule in CLAUDE.md: every feature ships with tests, and CI stays green
-- [ ] Push to GitHub so CI actually runs (no remote yet), then protect `main` so PRs need a green CI
+- [x] Public repo at github.com/szeming23/palate; `main` protected (PR + green CI required, linear history), secret scanning, Dependabot (2026-09-26)
 - [ ] Mobile unit tests (jest + React Native Testing Library) for the API client and settings
 - [ ] Coverage report in CI (pytest-cov), with a minimum threshold
 

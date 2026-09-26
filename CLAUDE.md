@@ -32,6 +32,18 @@ Some tests guard important rules. Keep them passing:
 
 The mobile app has no unit tests yet, only `tsc` via `npm run typecheck`. Keep it passing.
 
+## Git workflow
+
+The repo is public at https://github.com/szeming23/palate, and `main` is protected, even for the owner:
+- No direct pushes to `main`. Changes go in through a PR with a linear history (squash merge only).
+- The `backend (3.11)`, `backend (3.14)` and `mobile` CI checks must pass. The branch must also be up to date with `main`.
+- Every review conversation must be resolved. Force pushes and deleting `main` are blocked.
+- Secret scanning with push protection is on. Still, never commit `.env`, keys or `palate.db`.
+
+The flow: make a branch (`feat/...`, `fix/...`, `ci/...`), commit, run `./scripts/check.sh`, push, then `gh pr create`. Wait for CI with `gh pr checks --watch`, then merge with `gh pr merge --squash`. Only commit, push or merge when the user asks.
+
+Dependabot opens weekly PRs for GitHub Actions and pip, plus security PRs. Merge them only when CI is green. Expo packages aren't in Dependabot; upgrade them with `npx expo install --fix`.
+
 ## Commands
 
 ```bash
