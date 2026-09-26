@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "Palate",
+    "slug": "palate",
+    "scheme": "palate",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "android": {
+      "package": "com.palate.app",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Palate uses your location to find food near you."
+        }
+      ],
+      "expo-status-bar"
+    ]
+  }
+}
