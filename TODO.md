@@ -30,6 +30,9 @@ Decisions and future plans from the kickoff discussion (2026-09-24).
 - [ ] Dockerfile for the backend
 - [ ] Deploy to Fly.io or Railway (~$0–5/mo); alternatives are a Hetzner VPS (~€4/mo) or the Oracle Cloud free tier
 - [ ] Move SQLite to a persistent volume, or to Postgres when multi-user
+- [ ] Only the backend is public; the database is never exposed. SQLite: a file on the backend's own disk. Postgres: provider's private network, or strong password + TLS + IP allow-list; connection string in `DATABASE_URL` env var (discussed 2026-09-26)
+- [ ] Postgres move: swap `sqlite3` for `psycopg` in `db.py` (`?` → `%s`, `AUTOINCREMENT` → identity columns), add migrations (Alembic), run CI tests against a Postgres service container
+- [ ] Automated, encrypted DB backups
 - [ ] HTTPS only; switch Telegram to webhooks if polling becomes a problem
 
 ## Multi-user
@@ -38,6 +41,14 @@ Decisions and future plans from the kickoff discussion (2026-09-24).
 - [ ] Encrypt LLM keys at rest (currently plain env vars in `.env`) once the server is hosted
 - [ ] Admin screen in the app (create/revoke codes, view usage) instead of CLI only
 - [ ] Code expiry dates
+
+### User data & privacy (discussed 2026-09-26)
+The server DB holds personal data: profile (incl. allergies/diet), memories (incl. location habits), full chat history, recommendations + 👍/👎. The phone only keeps backend URL, access code, model and optional own key (SecureStore). GPS and the client's own key are never stored.
+- [ ] Let users delete their profile and recommendation history (memories and chat can already be deleted)
+- [ ] "Delete my account": remove all rows for a `user_id` across every table
+- [ ] Export my data (JSON download)
+- [ ] Privacy note in the app: what's stored, and that Anthropic (message, history, profile, memories, GPS) and Google Places (search text, GPS bias) receive parts of it per request; check Singapore PDPA obligations
+- [ ] Retention policy, e.g. prune chat history older than N months
 
 ## More LLM providers
 - [ ] OpenAI and Gemini providers implementing `LLMProvider` (`backend/palate/llm/base.py`)
