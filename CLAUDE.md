@@ -7,7 +7,7 @@ Singapore food-recommendation agent. FastAPI backend (`backend/palate/`) holds a
 The test suite is the regression net. CI (`.github/workflows/ci.yml`) runs it on every push and PR, and it must stay green.
 
 1. **Every feature or bug fix comes with tests in the same change.** New behaviour gets new tests. A bug fix gets a test that fails without the fix.
-2. **Run `./scripts/check.sh` before saying work is done.** It runs the same steps as CI: ruff lint + format check, pytest, and the mobile typecheck. If anything fails, fix it or tell the user it's failing. Don't call the work finished while it's red.
+2. **Run `./scripts/check.sh` before saying work is done.** It runs the same steps as CI: ruff lint + format check, pytest, the mobile typecheck and jest tests. If anything fails, fix it or tell the user it's failing. Don't call the work finished while it's red.
 3. **Don't weaken existing tests to make a change pass.** If a test fails, assume the change broke something. Only edit or delete a test when the behaviour it checks was changed on purpose, and say so to the user.
 4. **Tests never hit real services or real data.** `backend/tests/conftest.py` gives every test a temp SQLite DB and fake keys, and has fakes for Claude (`provider` fixture, `ScriptedProvider`) and Google Places (`fake_places`). Use them. No real API keys, no network, no `palate.db`.
 5. When adding an LLM provider, a tool, an endpoint or a DB table, follow the matching test file:
@@ -30,7 +30,15 @@ Some tests guard important rules. Keep them passing:
 - Using the client's own key skips the US$ budget but not the message cap.
 - The Places field mask stays on the cheaper SKU (`test_field_mask_stays_on_the_cheap_sku`).
 
-The mobile app has no unit tests yet, only `tsc` via `npm run typecheck`. Keep it passing.
+The mobile app uses jest (`jest-expo` preset) with React Native Testing Library, in `mobile/__tests__/`, plus `tsc` via `npm run typecheck`. Keep both passing. Mock the backend with `jest.mock("../lib/api")` and device storage with `test-utils/secureStoreMock.ts`; tests never call a real server.
+
+| Code | Tests |
+|---|---|
+| `mobile/lib/api.ts` | `__tests__/api.test.ts` (fake `fetch`) |
+| `mobile/lib/settings.ts` | `__tests__/settings.test.ts` |
+| `mobile/components/PlaceCard.tsx` | `__tests__/PlaceCard.test.tsx` |
+| `mobile/app/index.tsx` (chat) | `__tests__/ChatScreen.test.tsx` |
+| `mobile/app/settings.tsx` | `__tests__/SettingsScreen.test.tsx` |
 
 ## Git workflow
 
@@ -51,6 +59,7 @@ Dependabot opens weekly PRs for GitHub Actions and pip, plus security PRs. Merge
 cd backend && .venv/bin/pytest -q                   # backend tests only
 cd backend && .venv/bin/ruff check --fix . && .venv/bin/ruff format .   # auto-fix lint/format
 cd backend && .venv/bin/pip install -e '.[dev]'     # install test/lint tools
+cd mobile && npm test                               # mobile tests only (add -- --coverage for a report)
 ```
 
 ## Conventions
