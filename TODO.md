@@ -16,7 +16,7 @@ Decisions and future plans from the kickoff discussion (2026-09-24).
 - [x] GitHub Actions: backend tests on Python 3.11 + 3.14, mobile `tsc` typecheck; `scripts/check.sh` runs the same locally
 - [x] Rule in CLAUDE.md: every feature ships with tests, and CI stays green
 - [x] Public repo at github.com/szeming23/palate; `main` protected (PR + green CI required, linear history), secret scanning, Dependabot (2026-09-26)
-- [ ] Mobile unit tests (jest + React Native Testing Library) for the API client and settings
+- [ ] Mobile unit tests (jest + React Native Testing Library) for the API client and settings; then drop `sonar.coverage.exclusions` in sonar-project.properties
 - [x] Coverage report in CI (pytest-cov) + SonarCloud static analysis (2026-10-01)
 - [ ] Minimum coverage threshold, and make the SonarCloud quality gate a required check once it's stable
 

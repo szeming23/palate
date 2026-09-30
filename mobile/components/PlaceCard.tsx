@@ -21,12 +21,14 @@ export default function PlaceCard({ card }: { card: Card }) {
   ].filter(Boolean);
 
   async function vote(v: "up" | "down") {
-    const next = feedback === v ? null : v;
+    const prev = feedback;
+    const next = prev === v ? null : v;
     setFeedback(next);
     try {
       await sendFeedback(card.recommendation_id, next);
     } catch {
-      setFeedback(feedback); // revert on failure
+      // Revert on failure, unless another tap has changed it since.
+      setFeedback((current) => (current === next ? prev : current));
     }
   }
 

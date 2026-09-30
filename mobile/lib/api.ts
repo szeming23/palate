@@ -45,6 +45,7 @@ export type Memory = { id: number; kind: "fact" | "location"; content: string; c
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const s = await loadSettings();
+  if (!s.backendUrl) throw new Error("Set the Palate server URL in Settings.");
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(init.headers as Record<string, string>),
