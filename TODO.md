@@ -18,7 +18,8 @@ Decisions and future plans from the kickoff discussion (2026-09-24).
 - [x] Public repo at github.com/szeming23/palate; `main` protected (PR + green CI required, linear history), secret scanning, Dependabot (2026-09-26)
 - [x] Mobile unit tests (jest + React Native Testing Library): API client, settings storage, PlaceCard, chat and settings screens; coverage sent to SonarCloud (2026-10-01)
 - [x] Coverage report in CI (pytest-cov) + SonarCloud static analysis (2026-10-01)
-- [ ] Minimum coverage threshold, and make the SonarCloud quality gate a required check once it's stable
+- [x] SonarCloud quality gate is a required check: the `sonarcloud` job fails when the gate fails (2026-10-01)
+- [ ] Raise the coverage condition in the quality gate above the default 80% on new code
 
 ## v2: Telegram bot
 - [ ] Bot using `python-telegram-bot`, calling the same `agent.chat()`, so there's no duplicated logic

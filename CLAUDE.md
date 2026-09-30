@@ -44,7 +44,7 @@ The mobile app uses jest (`jest-expo` preset) with React Native Testing Library,
 
 The repo is public at https://github.com/szeming23/palate, and `main` is protected, even for the owner:
 - No direct pushes to `main`. Changes go in through a PR with a linear history (squash merge only).
-- The `backend (3.11)`, `backend (3.14)` and `mobile` CI checks must pass. The branch must also be up to date with `main`.
+- The `backend (3.11)`, `backend (3.14)`, `mobile` and `sonarcloud` CI checks must pass. `sonarcloud` fails when the SonarCloud quality gate fails (no new bugs, vulnerabilities or unreviewed hotspots, and at least 80% coverage on new code). It skips the scan on Dependabot PRs, which have no `SONAR_TOKEN`. The branch must also be up to date with `main`.
 - Every review conversation must be resolved. Force pushes and deleting `main` are blocked.
 - Secret scanning with push protection is on. Still, never commit `.env`, keys or `palate.db`.
 
