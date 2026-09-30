@@ -25,7 +25,13 @@ jobs:
       - name: Lint
         run: ruff check . && ruff format --check .
       - name: Tests
-        run: pytest -q
+        run: pytest -q --cov=palate --cov-report=xml --cov-report=term
+      # One copy of the coverage report is enough for SonarCloud.
+      - if: matrix.python-version == '3.14'
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage
+          path: backend/coverage.xml
 
   mobile:
     runs-on: ubuntu-latest
@@ -42,3 +48,21 @@ jobs:
       - run: npm ci
       - name: Typecheck
         run: npm run typecheck
+
+  sonarcloud:
+    needs: backend
+    runs-on: ubuntu-latest
+    env:
+      # Empty on Dependabot and fork PRs, which can't read repo secrets. The scan is skipped there.
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # full history, so Sonar can tell new code from old
+      - uses: actions/download-artifact@v8
+        with:
+          name: coverage
+          path: backend
+      - name: SonarCloud scan
+        if: env.SONAR_TOKEN != ''
+        uses: SonarSource/sonarqube-scan-action@v8

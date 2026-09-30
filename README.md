@@ -137,6 +137,8 @@ cd backend && pip install -e '.[dev]'   # once
 
 GitHub Actions (`.github/workflows/ci.yml`) runs the same checks on every push and PR. Tests use a temp database and fake Claude/Places clients, so they need no keys and cost nothing. Every feature should add tests; see [CLAUDE.md](CLAUDE.md).
 
+CI also measures backend test coverage (pytest-cov) and sends it, with the code, to [SonarCloud](https://sonarcloud.io/project/overview?id=szeming23_palate) for static analysis: bugs, security hotspots, code smells and duplication. Settings live in `sonar-project.properties`; the scan needs the `SONAR_TOKEN` repo secret and is skipped on Dependabot PRs, which can't read it.
+
 ## Project layout
 
 ```
