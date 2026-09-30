@@ -2,6 +2,8 @@
 
 Singapore food-recommendation agent. FastAPI backend (`backend/palate/`) holds all logic; the Expo app (`mobile/`) and the future Telegram bot are thin clients. See README.md for architecture and TODO.md for the roadmap.
 
+The public README is a project showcase for visitors: no setup steps, account or key instructions. Setup and operations notes (Google Places and Claude keys, access codes, running the backend and app, SonarCloud and branch-protection settings) live in the private repo `szeming23/palate-ops`, cloned next to this one at `../palate-ops`. Update that repo when setup steps change.
+
 ## Testing rules (required)
 
 The test suite is the regression net. CI (`.github/workflows/ci.yml`) runs it on every push and PR, and it must stay green.

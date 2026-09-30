@@ -1,26 +1,32 @@
 # Palate 🍜
 
+[![CI](https://github.com/szeming23/palate/actions/workflows/ci.yml/badge.svg)](https://github.com/szeming23/palate/actions/workflows/ci.yml)
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=szeming23_palate&metric=alert_status)](https://sonarcloud.io/project/overview?id=szeming23_palate)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=szeming23_palate&metric=coverage)](https://sonarcloud.io/project/overview?id=szeming23_palate)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=szeming23_palate&metric=bugs)](https://sonarcloud.io/project/overview?id=szeming23_palate)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=szeming23_palate&metric=vulnerabilities)](https://sonarcloud.io/project/overview?id=szeming23_palate)
+
 A food buddy that remembers you. Tell it what you feel like ("bishan chicken rice", "cheap dinner near me") and it searches real places nearby, then recommends a few picks based on your tastes, dietary needs, past 👍/👎 and where you usually hang out.
 
 ## Architecture
 
 ```
  Android app (Expo) ──┐
-                      ├──► Palate backend (FastAPI, Python) ──► LLM (Claude, via the user's own API key)
+                      ├──► Palate backend (FastAPI, Python) ──► LLM (Claude, server-held or user's own key)
  Telegram bot (later) ┘        │   agent loop + tools          ──► Google Places API (server-held key)
                                └── SQLite (memory, history, feedback)
 ```
 
 - **The backend holds all the logic** (agent loop, memory, tools), so the app and the future Telegram bot stay thin and behave the same.
-- **LLM keys live on the server, unlocked by access codes.** `backend/.env` holds any number of named keys (e.g. `anthropic-main`, `anthropic-dev`). Each client (your phone, your dev laptop, a friend, later the Telegram bot) gets its own **access code**, which maps to:
+- **LLM keys live on the server, unlocked by access codes.** The server holds any number of named keys. Each client (a phone, a dev laptop, a friend, later the Telegram bot) gets its own **access code**, which maps to:
   - a user (whose memory and history it uses)
   - which named key(s) to bill
   - which models it may use
   - daily limits: a message count and/or a US$ budget
 
-  Codes are random (`plt_...`) and stored only as SHA-256 hashes. Revoking one locks out that client without touching your Claude key. See [Access codes](#access-codes).
+  Codes are random (`plt_...`) and stored only as SHA-256 hashes. Revoking one locks out that client without touching the underlying key.
 - **Optional own key.** A client can still enter its own Claude key in Settings. It's stored encrypted on the phone and sent as `X-LLM-API-Key` for that request only (never saved on the server), and it skips the code's US$ budget.
-- **The Google Places key stays on the server** (`backend/.env`). Anything bundled in an APK can be extracted, so it must never go in the app.
+- **The Google Places key stays on the server.** Anything bundled in an APK can be extracted, so no key ever ships in the app.
 - **One user for now**, but every table has a `user_id` column so multi-user is an auth change, not a rewrite.
 - **Providers are pluggable**: `backend/palate/llm/` has a `LLMProvider` interface. Claude is the only provider so far.
 
@@ -45,99 +51,14 @@ A food buddy that remembers you. Tell it what you feel like ("bishan chicken ric
 
 You can view and delete learned memories in Settings.
 
-## Setup
+## Engineering
 
-### 1. Google Places API key
+- **CI on every push and PR** (GitHub Actions): ruff lint + format check, the backend test suite on Python 3.11 and 3.14, TypeScript typecheck, and the mobile test suite.
+- **Automated tests that need no keys or network:** pytest for the backend (temp database per test, fake Claude and Google Places clients) and jest + React Native Testing Library for the app (mocked server and device storage).
+- **Static analysis and coverage** with [SonarQube Cloud](https://sonarcloud.io/project/overview?id=szeming23_palate): bugs, vulnerabilities, security hotspots, code smells, duplication and coverage from both test suites. The quality gate is a required check, so a PR that adds a bug, a vulnerability or untested code can't merge.
+- **Protected `main`:** changes land only through PRs with all checks green and a linear history. Secret scanning with push protection is on, and Dependabot sends weekly dependency updates that go through the same checks.
 
-1. Create a Google Cloud account at https://console.cloud.google.com and a project (e.g. `palate`). Billing must be enabled, even for free usage.
-2. **APIs & Services → Library → "Places API (New)" → Enable.**
-3. **APIs & Services → Credentials → Create credentials → API key.** Edit the key:
-   - *API restrictions* → restrict to **Places API (New)** only.
-4. **Protect your wallet:**
-   - **Billing → Budgets & alerts**: create a budget (e.g. US$5) with email alerts.
-   - **APIs & Services → Places API (New) → Quotas**: lower the per-day request cap (e.g. 200/day). This is the only *hard* stop; budgets only send alerts.
-5. Pricing: Google gives a free monthly usage allowance per SKU. We request rating/price/opening-hours fields, which fall under a higher Text Search tier, so check the current numbers on the [pricing page](https://developers.google.com/maps/billing-and-pricing/pricing). Personal use should stay well within the free allowance.
-
-### 2. Backend
-
-WSL/Ubuntu needs `venv` support first:
-
-```bash
-sudo apt install python3-venv python3-pip      # or install uv: curl -LsSf https://astral.sh/uv/install.sh | sh
-cd backend
-python3 -m venv .venv && source .venv/bin/activate
-pip install -e .
-cp .env.example .env                            # fill in GOOGLE_PLACES_API_KEY and PALATE_KEY_* lines
-python -m palate.admin keys                     # check your keys loaded
-python -m palate.admin codes add my-phone --key anthropic-main --daily-usd 3   # prints your access code
-uvicorn palate.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-Check it: `curl localhost:8000/health`. API docs are at http://localhost:8000/docs.
-
-### 3. Android app
-
-Install Node.js (LTS) in WSL, e.g. via [nvm](https://github.com/nvm-sh/nvm): `nvm install --lts`.
-
-```bash
-cd mobile
-npm install expo@latest
-npx expo install expo-router react react-native react-native-screens react-native-safe-area-context \
-  expo-linking expo-constants expo-status-bar expo-location expo-secure-store @react-native-picker/picker
-npx expo install -- --save-dev typescript @types/react
-npx expo start --tunnel
-```
-
-Install **Expo Go** from the Play Store and scan the QR code.
-
-In the app, open **Settings** and fill in:
-- **Palate server URL**: see below
-- **Access code**: the `plt_...` code printed by `codes add`
-- Tap **Connect**, then pick a **Model** (the list shows only what your code allows)
-
-#### Letting your phone reach the backend inside WSL
-
-WSL2 sits behind NAT, so the phone can't see `localhost:8000` directly. Pick one of these:
-
-- **Easiest: a tunnel.** Run `cloudflared tunnel --url http://localhost:8000` (no account needed) and paste the `https://….trycloudflare.com` URL into Settings. This also works when you're away from home Wi-Fi.
-- **Same Wi-Fi.** On Windows 11, add `[wsl2]` / `networkingMode=mirrored` to `%UserProfile%\.wslconfig`, run `wsl --shutdown`, allow port 8000 in Windows Firewall, then use `http://<your-PC's-LAN-IP>:8000`.
-
-## Access codes
-
-Keys go in `backend/.env` as `PALATE_KEY_<NAME>=<provider>:<secret>`:
-
-```
-PALATE_KEY_ANTHROPIC_MAIN=anthropic:sk-ant-...     → "anthropic-main"
-PALATE_KEY_ANTHROPIC_DEV=anthropic:sk-ant-...      → "anthropic-dev"
-```
-
-Manage codes with the admin CLI (run inside `backend/` with the venv active):
-
-```bash
-python -m palate.admin keys                                    # list configured keys (masked)
-python -m palate.admin codes add my-phone --key anthropic-main --daily-usd 3
-python -m palate.admin codes add dev-laptop --key anthropic-dev
-python -m palate.admin codes add friend --user friend --key anthropic-main \
-    --models claude-haiku-4-5 --daily-messages 50
-python -m palate.admin codes list                              # codes + today's usage
-python -m palate.admin codes remove friend                     # revoke immediately
-```
-
-- `--user` decides whose memory and history the code shares. Your phone and laptop both default to `me`; give a friend their own user so your memories stay separate.
-- A code can list one `--key` per provider (e.g. an Anthropic key and, later, an OpenAI key).
-- The US$ budget is estimated from token usage and model prices in `backend/palate/llm/__init__.py`. It's checked *before* each message, so the last message of the day can go slightly over. Set a spending limit in the Anthropic Console too, as a hard backstop.
-- Limits reset at midnight Singapore time.
-
-## Tests & CI
-
-```bash
-cd backend && pip install -e '.[dev]'   # once
-./scripts/check.sh                      # lint + backend tests + mobile typecheck + mobile tests (same as CI)
-```
-
-GitHub Actions (`.github/workflows/ci.yml`) runs the same checks on every push and PR. Backend tests use a temp database and fake Claude/Places clients; mobile tests (jest + React Native Testing Library) mock the server and device storage. Neither needs keys or costs anything. Every feature should add tests; see [CLAUDE.md](CLAUDE.md).
-
-CI also measures test coverage (pytest-cov for the backend, jest for the app) and sends it, with the code, to [SonarCloud](https://sonarcloud.io/project/overview?id=szeming23_palate) for static analysis: bugs, security hotspots, code smells and duplication. Settings live in `sonar-project.properties`; the scan needs the `SONAR_TOKEN` repo secret and is skipped on Dependabot PRs, which can't read it.
+Run everything CI runs, locally: `./scripts/check.sh`. Contributor and testing rules are in [CLAUDE.md](CLAUDE.md).
 
 ## Project layout
 
@@ -149,7 +70,7 @@ backend/palate/
   places.py       Google Places API (New) client
   db.py           SQLite schema + queries
   access.py       access codes: key selection, allowed models, daily limits
-  admin.py        CLI to manage access codes (`python -m palate.admin`)
+  admin.py        CLI to manage access codes
   config.py       env config, including named LLM keys
   llm/            provider interface + Claude implementation + model list
 backend/tests/    pytest suite (conftest.py has the fakes)
