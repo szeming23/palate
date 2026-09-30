@@ -26,7 +26,7 @@ jobs:
         run: ruff check . && ruff format --check .
       - name: Tests
         run: pytest -q --cov=palate --cov-report=xml --cov-report=term
-      # One copy of the coverage report is enough for SonarCloud.
+      # One copy of the backend coverage report is enough for SonarCloud.
       - if: matrix.python-version == '3.14'
         uses: actions/upload-artifact@v7
         with:
@@ -48,9 +48,17 @@ jobs:
       - run: npm ci
       - name: Typecheck
         run: npm run typecheck
+      - name: Tests
+        run: npm test -- --coverage
+      # jest writes paths relative to mobile/; Sonar resolves them from the repo root.
+      - run: sed -i 's#^SF:#SF:mobile/#' coverage/lcov.info
+      - uses: actions/upload-artifact@v7
+        with:
+          name: mobile-coverage
+          path: mobile/coverage/lcov.info
 
   sonarcloud:
-    needs: backend
+    needs: [backend, mobile]
     runs-on: ubuntu-latest
     env:
       # Empty on Dependabot and fork PRs, which can't read repo secrets. The scan is skipped there.
@@ -63,6 +71,10 @@ jobs:
         with:
           name: coverage
           path: backend
+      - uses: actions/download-artifact@v8
+        with:
+          name: mobile-coverage
+          path: mobile/coverage
       - name: SonarCloud scan
         if: env.SONAR_TOKEN != ''
         uses: SonarSource/sonarqube-scan-action@v8

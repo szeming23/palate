@@ -17,4 +17,7 @@ echo "== mobile: typecheck =="
 cd "$root/mobile"
 npm run -s typecheck
 
+echo "== mobile: tests =="
+npm test -s
+
 echo "All checks passed."

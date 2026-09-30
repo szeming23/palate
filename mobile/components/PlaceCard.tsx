@@ -52,10 +52,20 @@ export default function PlaceCard({ card }: { card: Card }) {
           <View />
         )}
         <View style={styles.votes}>
-          <Pressable onPress={() => vote("up")} hitSlop={8} accessibilityLabel="Good pick">
+          <Pressable
+            onPress={() => vote("up")}
+            hitSlop={8}
+            accessibilityLabel="Good pick"
+            accessibilityState={{ selected: feedback === "up" }}
+          >
             <Text style={[styles.vote, { opacity: feedback === "up" ? 1 : 0.4 }]}>👍</Text>
           </Pressable>
-          <Pressable onPress={() => vote("down")} hitSlop={8} accessibilityLabel="Bad pick">
+          <Pressable
+            onPress={() => vote("down")}
+            hitSlop={8}
+            accessibilityLabel="Bad pick"
+            accessibilityState={{ selected: feedback === "down" }}
+          >
             <Text style={[styles.vote, { opacity: feedback === "down" ? 1 : 0.4 }]}>👎</Text>
           </Pressable>
         </View>

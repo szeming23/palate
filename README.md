@@ -132,12 +132,12 @@ python -m palate.admin codes remove friend                     # revoke immediat
 
 ```bash
 cd backend && pip install -e '.[dev]'   # once
-./scripts/check.sh                      # lint + backend tests + mobile typecheck (same as CI)
+./scripts/check.sh                      # lint + backend tests + mobile typecheck + mobile tests (same as CI)
 ```
 
-GitHub Actions (`.github/workflows/ci.yml`) runs the same checks on every push and PR. Tests use a temp database and fake Claude/Places clients, so they need no keys and cost nothing. Every feature should add tests; see [CLAUDE.md](CLAUDE.md).
+GitHub Actions (`.github/workflows/ci.yml`) runs the same checks on every push and PR. Backend tests use a temp database and fake Claude/Places clients; mobile tests (jest + React Native Testing Library) mock the server and device storage. Neither needs keys or costs anything. Every feature should add tests; see [CLAUDE.md](CLAUDE.md).
 
-CI also measures backend test coverage (pytest-cov) and sends it, with the code, to [SonarCloud](https://sonarcloud.io/project/overview?id=szeming23_palate) for static analysis: bugs, security hotspots, code smells and duplication. Settings live in `sonar-project.properties`; the scan needs the `SONAR_TOKEN` repo secret and is skipped on Dependabot PRs, which can't read it.
+CI also measures test coverage (pytest-cov for the backend, jest for the app) and sends it, with the code, to [SonarCloud](https://sonarcloud.io/project/overview?id=szeming23_palate) for static analysis: bugs, security hotspots, code smells and duplication. Settings live in `sonar-project.properties`; the scan needs the `SONAR_TOKEN` repo secret and is skipped on Dependabot PRs, which can't read it.
 
 ## Project layout
 
@@ -158,6 +158,7 @@ mobile/
   app/settings.tsx  connection + access code, model dropdown, optional own key, preferences, memories
   components/PlaceCard.tsx
   lib/              API client, secure settings, theme
+  __tests__/        jest tests (test-utils/ has the SecureStore fake)
 ```
 
 See [TODO.md](TODO.md) for the roadmap.
