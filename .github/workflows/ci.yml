@@ -7,7 +7,7 @@ on:
 
 jobs:
   backend:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04 # TEMP: trial run on the new image; revert before merge
     defaults:
       run:
         working-directory: backend
@@ -34,7 +34,7 @@ jobs:
           path: backend/coverage.xml
 
   mobile:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04 # TEMP: trial run on the new image; revert before merge
     defaults:
       run:
         working-directory: mobile
@@ -51,7 +51,7 @@ jobs:
 
   sonarcloud:
     needs: backend
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04 # TEMP: trial run on the new image; revert before merge
     env:
       # Empty on Dependabot and fork PRs, which can't read repo secrets. The scan is skipped there.
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

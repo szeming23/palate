@@ -15,7 +15,7 @@ import {
   getProfile,
   saveProfile,
 } from "../lib/api";
-import { DEFAULT_SETTINGS, Settings, loadSettings, saveSettings } from "../lib/settings";
+import { DEFAULT_SETTINGS, Settings, isInsecureRemoteUrl, loadSettings, saveSettings } from "../lib/settings";
 import { Theme, useTheme } from "../lib/theme";
 
 const EMPTY_PROFILE: Profile = { dietary: "", allergies: "", budget: "", likes: "", dislikes: "", notes: "" };
@@ -40,10 +40,16 @@ export default function SettingsScreen() {
   const [serverStatus, setServerStatus] = useState<string>("");
 
   useEffect(() => {
-    loadSettings().then((loaded) => {
-      setSettings(loaded);
-      refreshFromServer(loaded);
-    });
+    async function init() {
+      try {
+        const loaded = await loadSettings();
+        setSettings(loaded);
+        await refreshFromServer(loaded);
+      } catch (e: any) {
+        setServerStatus(`Couldn't load saved settings: ${e.message}`);
+      }
+    }
+    void init();
   }, []);
 
   async function refreshFromServer(current: Settings) {
@@ -115,12 +121,17 @@ export default function SettingsScreen() {
           style={s.input}
           value={settings.backendUrl}
           onChangeText={(v) => update("backendUrl", v.trim())}
-          placeholder="http://192.168.1.2:8000"
+          placeholder="https://your-tunnel.trycloudflare.com"
           placeholderTextColor={t.muted}
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="url"
         />
+        {isInsecureRemoteUrl(settings.backendUrl) ? (
+          <Text style={[s.hint, { color: t.bad }]}>
+            This http address isn't on your local network, so your access code would be sent unencrypted. Use https.
+          </Text>
+        ) : null}
         <Text style={s.label}>Access code</Text>
         <TextInput
           style={s.input}
